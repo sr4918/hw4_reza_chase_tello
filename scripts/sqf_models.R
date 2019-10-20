@@ -1,4 +1,5 @@
 library(tidyverse)
+library(ROCR)
 #QB1_2
       #set the seed to2048.
       set.seed(2048)
@@ -57,9 +58,50 @@ library(tidyverse)
       #and outputs the corresponding AUC on the validationset (use theROCRpackage).
       #Also note thatmutate()might not behave like you expect when fitting adifferent model for each row; 
       #one solution is to use the rowwise()and do()commands.
+     
+      get_auc<-function(X1, X2)
+      {
+        model <- glm(formula = paste("found.weapon ~", X1," +",X2, "+ precinct"), family = binomial, data = train_sqf)
+        pred_B2 <- predict(model, validation_sqf, type = "response")
+        ROCR_B2 <- prediction(pred_B2, validation_sqf$found.weapon)
+        auc_ROCR_B2 <- performance(ROCR_B2, measure = "auc")
+        return (auc <- auc_ROCR_B2@y.values[[1]])
+      }
+  # t<- get_auc(model_performance[1,1],model_performance[1,2])
+      for ( i in 1:nrow(model_performance))
+      {
+          model_performance[i,3]<-get_auc(model_performance[i,1], model_performance[i,2])
+      }
+
+      names(model_performance)<-c("feature_one", "feature_two","validation_auc")
+      max_auc <-max(model_performance$validation_auc)
+      maxindex <- which(model_performance$validation_auc== max_auc)
       
+      #33, 75.48
       
+#B2.3
+      # Combine train_sqf andvalidation_sqf and fit a logistic regression model on this combined dataset using 
+      # the same triplet of features that mazimized the AUC in the previous step. Report the AUCobtained when
+      # making predictions with this new model ontest_sqf. Note that although this modeluses the same features 
+      # as the model from the previous step, it will have different coefficients since it istrained on more data.
        
+      B2.3_data<-rbind(train_sqf, validation_sqf)
+      X1<-model_performance[maxindex,1]
+        X2<-model_performance[maxindex,2]
+      modelB2.3 <- glm(formula = paste("found.weapon ~", X1," +",X2, "+ precinct"), family = binomial, data = B2.3_data)
+      pred_B2.3 <- predict(modelB2.3, test_sqf, type = "response")
+      ROCR_B2.3 <- prediction(pred_B2.3, test_sqf$found.weapon)
+      auc_ROCR_B2.3 <- performance(ROCR_B2.3, measure = "auc")
+      this_auc<-auc_ROCR_B2.3@y.values[[1]]
       
+      #75.22%
+#B2.4 Plot a histogram of the 528 validation set AUC scores from Question B2.1, with a solid red
+      #vertical line illustrating the AUC you obtained in question B2.3 (the "best" three-feature model
+      #trained on 80%of the data), and a dotted red vertical line illustrating the AUC you obtained for the corresponding model 
+      #trained just on train_sqf from Question B2.2. Save this figure tofigures/question_b2.png.
+      myhistogram<-ggplot(data=model_performance, aes(model_performance$validation_auc)) +  geom_histogram(col = "blue",aes(fill=..count..))+
+        geom_vline(xintercept=max_auc, linetype="solid", color = "red")+
+      geom_vline(xintercept = this_auc, linetype = "dashed", color = "red")+
+        labs(title="Histogram for AUC of different models", x="validation_AUC", y="Count")
+      ggsave("hw4_Reza/figures/question_b2.png", myhistogram)
       
-  
