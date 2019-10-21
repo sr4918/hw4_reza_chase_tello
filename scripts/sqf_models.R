@@ -1,5 +1,7 @@
 library(tidyverse)
 library(ROCR)
+library(ggplot2)
+setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 4")
 #QB1_2
       #set the seed to2048.
       set.seed(2048)
@@ -105,3 +107,121 @@ library(ROCR)
         labs(title="Histogram for AUC of different models", x="validation_AUC", y="Count")
       ggsave("hw4_Reza/figures/question_b2.png", myhistogram)
       
+
+#B3
+      #B3.1
+      #1. Take sqf_data from Question B1.2 and split it temporally at the year 2015, storing the results as
+      #sqf_pre_2015 (data from 2013-2014) and sqf_2015 (data from 2015), respectively. Remove the id
+      #and year columns from both datasets.
+      sqf_pre_2015<-sqf_data%>%filter(year ==2013 |year ==2014) %>% select( -id, -year)
+      sqf_2015<-sqf_data%>%filter(year == 2015)%>% select( -id, -year)
+      
+      #B3.2
+      #2. Randomly shuffle sqf_pre_2015 and split it in half, storing the results as sqf_pre_train and
+      #sqf_pre_test.
+      
+      sqf_pre_2015<-sample_n(sqf_pre_2015, n())
+      
+      index<-sample(1:nrow(sqf_pre_2015),.5*nrow(sqf_pre_2015))
+      sqf_pre_train <- sqf_pre_2015[index,]
+      sqf_pre_test <- sqf_pre_2015[-index,]
+      
+      #B3.3
+      #3. Fit a logistic regression on sqf_pre_train, using all features to predict whether a weapon was found
+      #or not.
+      modelB3.3 <- glm(found.weapon~precinct+location.housing+stopped.bc.bulge+stopped.bc.object+stopped.bc.desc+
+                     stopped.bc.casing +stopped.bc.lookout+ stopped.bc.clothing  + stopped.bc.drugs + stopped.bc.furtive     +    stopped.bc.violent       
+                    + stopped.bc.other +  additional.report + additional.investigation +  additional.associating   
+                   +  additional.proximity  + additional.evasive  +  additional.direction + additional.highcrime     
+                    + additional.time +  additional.sights +  additional.other +  suspect.age  + suspect.sex            +    suspect.build        +      suspect.height         +    suspect.weight           
+                    + inside  +  radio.run +  officer.uniform   +    observation.period   + day +  month                 +     time.period              
+                   , family = binomial, data = sqf_pre_train)
+      
+      
+      #B3.4
+      #4. Report the AUC of this model when making predictions on both sqf_pre_test and sqf_2015.
+      pred_B3.4 <- predict(modelB3.3, sqf_pre_test, type = "response")
+      ROCR_B3.4 <- prediction(pred_B3.4, sqf_pre_test$found.weapon)
+      auc_ROCR_B3.4 <- performance(ROCR_B3.4, measure = "auc")
+      auc_B3.4 <- auc_ROCR_B3.4@y.values[[1]]
+      # value is 82.2%
+      
+      pred_B3.4_b <- predict(modelB3.3, sqf_2015, type = "response")
+      ROCR_B3.4_b <- prediction(pred_B3.4_b, sqf_2015$found.weapon)
+      auc_ROCR_B3.4_b <- performance(ROCR_B3.4_b, measure = "auc")
+      auc_B3.4_b <- auc_ROCR_B3.4_b@y.values[[1]]
+      #value is 75.46%
+      
+
+#QB4
+      sqf_data_B4<-sqf %>% filter(suspected.crime=="cpw") %>%
+        select(id, year, found.weapon, precinct, location.housing,  
+               stopped.bc.bulge, stopped.bc.object,
+               stopped.bc.desc,   stopped.bc.casing, 
+               stopped.bc.lookout, stopped.bc.clothing,
+               stopped.bc.drugs,stopped.bc.furtive,
+               stopped.bc.violent, stopped.bc.other,
+               additional.report,  additional.investigation, 
+               additional.associating,  additional.proximity, 
+               additional.evasive, additional.direction,
+               additional.highcrime, additional.time, 
+               additional.sights,additional.other,
+               suspect.age,suspect.sex,suspect.build,suspect.height, suspect.weight,
+               inside,radio.run, officer.uniform, observation.period, day, month, time.period
+        ) %>%
+        mutate( precinct = factor(precinct),
+                time.period= factor(time.period)
+        )%>% 
+        filter(complete.cases(.))
+     
+      #  QB4.1
+      #  Fit a logistic regression model on stops from 2008 predicting found.weapon as a function of all other
+      #  predictors (not including id and year), and obtain an AUC for predictions made on each year of data
+      #  from 2009-2016. That is, for each year after 2008 (2009-2016), subset the data to observations from
+      #  that year, and use that data to obtain the AUC (using the ROCR package) for the model fit on stops
+      #  from 2008.
+      #  Note: you might have to exclude Precinct 121 to compute these AUCs.
+      
+      sqf_data_B4_train<-sqf_data_B4 %>% filter(year ==2008)
+      sqf_data_B4<-sqf_data_B4 %>% filter(precinct!=121)
+      model_B4.1<-glm(found.weapon~precinct+location.housing+stopped.bc.bulge+stopped.bc.object+stopped.bc.desc+
+                        stopped.bc.casing +stopped.bc.lookout+ stopped.bc.clothing  + stopped.bc.drugs + stopped.bc.furtive     +    stopped.bc.violent       
+                      + stopped.bc.other +  additional.report + additional.investigation +  additional.associating   
+                      +  additional.proximity  + additional.evasive  +  additional.direction + additional.highcrime     
+                      + additional.time +  additional.sights +  additional.other +  suspect.age  + suspect.sex            +    suspect.build        +      suspect.height         +    suspect.weight           
+                      + inside  +  radio.run +  officer.uniform   +    observation.period   + day +  month                 +     time.period              
+                      , family = binomial, data = sqf_data_B4_train)
+      
+      calc_auc<- function(X){
+        pred<- predict(model_B4.1, X , type = "response")
+        ROCR <- prediction(pred, X$found.weapon)
+        auc_ROCR <- performance(ROCR, measure = "auc")
+        return (auc <- auc_ROCR@y.values[[1]])
+        
+      }
+      
+      auc_df<-data.frame(Year=c(2009:2016),
+                          AUC=as.numeric(0) 
+                        ) 
+      for (i in 2009:2016)
+      {
+        t<-filter(sqf_data_B4, year==i)
+        auc_df[i-2008,2]<-calc_auc(t)
+
+      }
+    
+      #B4.2
+      #Make a plot with these AUC scores on the y-axis and the year on the x-axis. Save this figure to
+      #figures/question_b4.png in your submission. In your writeup, report what you see in this plot, and
+      #why this might occur.
+      myhistogram<-
+        geom_vline(xintercept=max_auc, linetype="solid", color = "red")+
+        geom_vline(xintercept = this_auc, linetype = "dashed", color = "red")+
+        labs(title="Histogram for AUC of different models", x="validation_AUC", y="Count")
+      ggsave("hw4_Reza/figures/question_b2.png", myhistogram)
+      
+      p <-ggplot(auc_df, aes(Year, AUC))
+      p +geom_bar(stat = "identity")
+      
+      AUC_hist<-ggplot(data=auc_df, aes(Y=auc_df$) +  geom_bar(col = "blue")+
+        labs(title="Histogram for AUC of different years", x="Year", y="AUC")
