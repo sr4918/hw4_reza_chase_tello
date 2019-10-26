@@ -1,7 +1,7 @@
 library(tidyverse)
 library(rvest)
 library(lubridate)
-setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 4")
+#setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 4")
 
 #Assignment 4
             #function to trim trailing white spaces
@@ -92,18 +92,17 @@ setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 
           #loop over all urls in neighborhood_df, get crime and hour data, attach neighborhood name and bind rows for each
            for (i in 1: nrow(neighborhood_df))
            { 
-              # nh_name<-neighborhood_df$neighborhood_names[i]
                crime<-GetHour_CrimeType(neighborhood_df$urls[i])    
                 #add neighbourhood
                crime<-cbind(crime,neighborhood_df$neighborhood_names[i])
                colnames(crime) <- col
-                #rowbind to add to original
-                crime_data<-rbind(crime_data, crime,stringsAsFactors = FALSE)
+               #rowbind to add to original
+               crime_data<-rbind(crime_data, crime,stringsAsFactors = FALSE)
             }
      
             
         crime_data<- crime_data%>%mutate(hour = as.integer(hour))
-        write.csv(crime_data, "hw4_Reza/data/question_a2_1.csv")
+        write_csv(crime_data, "hw4_Reza/data/question_a2_1.csv")
            
            
         
