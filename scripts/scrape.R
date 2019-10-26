@@ -3,6 +3,7 @@ library(rvest)
 library(lubridate)
 #Assignment 4
 #function to trim trailing white spaces
+setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 4")
 trim.trailing <- function (x) sub("\\s+$", "", x)
 
 #function to get crime hour and name from url           
@@ -109,29 +110,8 @@ trim.trailing <- function (x) sub("\\s+$", "", x)
             }
      
             
-        crime_data<- crime_data%>%mutate(hour = as.numeric(hour))
-           colnames(crime_data) <- col
+        crime_data<- crime_data%>%mutate(hour = as.integer(hour))
+        write.csv(crime_data, "hw4_Reza/data/question_a2_1.csv")
            
            
-        #  
-            #testing with one link
-            url3<-"https://www.universalhub.com/crime/south-end.html"
-            #getting html from url
-            response3<-read_html(url3)
-            
-            
-            
-            #getting hour of crime
-            date <- rvest::html_nodes(x = response3,
-                                               xpath = '//td[contains(@class, "date")]')
-            date<-rvest::html_text(date, trim =T)
-            hours<-as.integer(parse_date_time(date, "%m%d%y-%H:%M %p") %>% hour())
-            
-            #getting crime_type
-            crime_type <- rvest::html_nodes(x = response3,
-                                      xpath = '//td[contains(@class, "name")]')
-            type<-rvest::html_text(crime_type, trim =T)
-            trim.trailing <- function (x) sub("\\s+$", "", x)
-            type<-trim.trailing(type)
-           
-           x<-cbind(type,hours) 
+        
