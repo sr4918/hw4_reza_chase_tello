@@ -63,7 +63,8 @@ library(lubridate)
             urls<-html_attr(x= urls, 'value')
             urls<-urls[1:20]
             urls<-paste(url2_home,urls,sep = "")
-            urls<-gsub(" ", "", urls, fixed = TRUE)           
+            urls<-gsub(" ", "", urls, fixed = TRUE)   
+            pages<-0
             neighborhood_df<-data.frame(neighborhood_names, urls, pages, stringsAsFactors = F)
            
             
