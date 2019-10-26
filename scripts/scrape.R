@@ -1,56 +1,49 @@
 library(tidyverse)
 library(rvest)
 library(lubridate)
-#Assignment 4
-#function to trim trailing white spaces
 setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 4")
-trim.trailing <- function (x) sub("\\s+$", "", x)
 
-#function to get crime hour and name from url           
-            GetHour_CrimeType<-function(url)
-            {
-              response<-read_html(url)
-              date <- rvest::html_nodes(x = response,
-                                        xpath = '//td[contains(@class, "date")]')
-              date<-rvest::html_text(date, trim =T)
-              hours<-as.integer(parse_date_time(date, "%m%d%y-%H:%M %p") %>% hour())
-              
-              crime_type <- rvest::html_nodes(x = response,
-                                              xpath = '//td[contains(@class, "name")]')
-              type<-rvest::html_text(crime_type, trim =T)
-              type<-trim.trailing(type)
-              crime_df<-cbind(type, hours )
-              names(crime_df)<-c("name", "hour")
-              return (crime_df)
-            }
-#function to get pages associated with URL
+#Assignment 4
+            #function to trim trailing white spaces
+            trim.trailing <- function (x) sub("\\s+$", "", x)
             
-            get_pages<-function(url)
-            {
-              res <- read_html(url) 
-              nod<-html_nodes(x= res, xpath = '//*[contains(@class, "pager")]')
-              t<-rvest::html_text(nod, trim =T)
-              if(length(t)>0)
-                t<-as.numeric(t[(length(t)-2)])
-              else t<-0
-              return (t)
-              
-            }           
-            
-            #Q4.1  
-            #name of the crime, from the Type field on each page. Make sure to get rid of trailing
-            #whitespace and "\\n" in the crime type names.
-            #ii. hour: the hour as an integer from 0 to 23, from the Date field. You might find
-            #lubridate::parse_date_time() useful.
-            #iii. neighborhood (the neighborhood name as a string)
+            #function to get crime hour and name from url           
+                        GetHour_CrimeType<-function(url)
+                        {
+                          response<-read_html(url)
+                          date <- rvest::html_nodes(x = response,
+                                                    xpath = '//td[contains(@class, "date")]')
+                          date<-rvest::html_text(date, trim =T)
+                          hours<-as.integer(parse_date_time(date, "%m%d%y-%H:%M %p") %>% hour())
+                          
+                          crime_type <- rvest::html_nodes(x = response,
+                                                          xpath = '//td[contains(@class, "name")]')
+                          type<-rvest::html_text(crime_type, trim =T)
+                          type<-trim.trailing(type)
+                          crime_df<-cbind(type, hours )
+                          names(crime_df)<-c("name", "hour")
+                          return (crime_df)
+                        }
+            #function to get pages associated with URL
+                        
+                        get_pages<-function(url)
+                        {
+                          res <- read_html(url) 
+                          nod<-html_nodes(x= res, xpath = '//*[contains(@class, "pager")]')
+                          t<-rvest::html_text(nod, trim =T)
+                          if(length(t)>0)
+                            t<-as.numeric(t[(length(t)-2)])
+                          else t<-0
+                          return (t)
+                          
+                        }           
+                        
+#Q4.1  
+            #name of the crime, from the Type field on each page. 
+            #hour
+            #neighborhood
             #Save crime_data to data/question_a2_1.csv in your submission directory.
-            #Here are some helpful tips that might save you time:
-             # . Make sure to get all data from all neighborhoods; some of the neighborhoods have multiple pages
-            #of data or non-standard patterns.
-            #. You may also find it helpful to use a for loop and combine to loop over the urls and combine
-            #neighborhood tibbles into crime_data.            
             
-
             url2<-"https://www.universalhub.com/crime"
             url2_home<-"https://www.universalhub.com"
             #getting html from url
@@ -90,20 +83,19 @@ trim.trailing <- function (x) sub("\\s+$", "", x)
                 }
               }            
            
-          #  urls<-c(urls, new_url)
-            #create Empty dataframe
+          #create Empty dataframe
            crime_data<- data.frame(matrix(ncol = 3, nrow = 0))
             x <- c("crime", "hour", "neighborhood")
             colnames(crime_data) <- x
           #   crime_data<-data.frame(crime = character(1), hour= character(1), neighborhood=character(1), stringsAsFactors = F)
 
-          #loop over urls, get crime and hour data, attach neighborhood name and bind rows for each
+          #loop over all urls in neighborhood_df, get crime and hour data, attach neighborhood name and bind rows for each
            for (i in 1: nrow(neighborhood_df))
            { 
               # nh_name<-neighborhood_df$neighborhood_names[i]
                crime<-GetHour_CrimeType(neighborhood_df$urls[i])    
                 #add neighbourhood
-               crime<-cbind(crime,ifelse(is.na(neighborhood_df$neighborhood_names[i]),"",neighborhood_df$neighborhood_names[i]))
+               crime<-cbind(crime,neighborhood_df$neighborhood_names[i])
                colnames(crime) <- col
                 #rowbind to add to original
                 crime_data<-rbind(crime_data, crime,stringsAsFactors = FALSE)
