@@ -1,58 +1,11 @@
 library(tidyverse)
 library(rvest)
 library(lubridate)
-
-
-url<-"https://www.universalhub.com/crime/murder/2018"
-#getting html from url
-      response<-read_html(url)
-
-#getting specific node containing information
-      victim_names<-rvest::html_nodes(x= response, xpath = '//td[contains(@class,"victim-name")]')
-
-#getting the values from the nodes
-      victim_names<-rvest::html_text(victim_names, trim =T)
-#write a function to do this
-      extract_all_victim_names <- function(parsed_html){
-        vict_name_els<-rvest::html_nodes(x = parsed_html, xpath = '//td[contains(@class,"victim-name")]')
-        vict_names<-rvest::html_text(vict_name_els, trim =T)
-        vict_names
-        
-      }
-      
-# get links to corresponding elements
-      a_els<-html_nodes(x = response, xpath = '//td[contains(@class,"title")]')
-      #link information is one tree below
-      hrefs<-html_attr(x= html_children(a_els), 'href')
-      links<- paste0('https://www.universalhub.com', hrefs)
-      
-# now grab article text from all the links above
-      story_extractor<-function(url)
-      {
-        content<-read_html(url)
-        text<-html_nodes(x= content, xpath = '(//p)[position()<3]') #position added to filter extra information
-        text<-html_text(text)
-        text<-str_c(text, collapse =' ') #merge teh 2 parts
-        text
-      }
-      story_extractor(links[1])
-
-#put all information from all links in the tibble #relevant to hw b part too
-            murder_victims<-tibble('victim' = victim_names,
-                                   'link'= links)
-            
-#putting third column calls function
-            story_content<-murder_victims %>%
-              rowwise() %>% do(linked_story = story_extractor(.$link)) %>%
-              unnest()
-           
-            murder_victims<-murder_victims %>%
-              mutate(linked_story = story_content$linked_story)
-            
-########################################################## 
 #Assignment 4
-            trim.trailing <- function (x) sub("\\s+$", "", x)
-            
+#function to trim trailing white spaces
+trim.trailing <- function (x) sub("\\s+$", "", x)
+
+#function to get crime hour and name from url           
             GetHour_CrimeType<-function(url)
             {
               response<-read_html(url)
@@ -66,10 +19,22 @@ url<-"https://www.universalhub.com/crime/murder/2018"
               type<-rvest::html_text(crime_type, trim =T)
               type<-trim.trailing(type)
               crime_df<-cbind(type, hours )
-              names(crime_df)<-c("crime", "hour")
+              names(crime_df)<-c("name", "hour")
               return (crime_df)
             }
+#function to get pages associated with URL
             
+            get_pages<-function(url)
+            {
+              res <- read_html(url) 
+              nod<-html_nodes(x= res, xpath = '//*[contains(@class, "pager")]')
+              t<-rvest::html_text(nod, trim =T)
+              if(length(t)>0)
+                t<-as.numeric(t[(length(t)-2)])
+              else t<-0
+              return (t)
+              
+            }           
             
             #Q4.1  
             #name of the crime, from the Type field on each page. Make sure to get rid of trailing
@@ -92,57 +57,59 @@ url<-"https://www.universalhub.com/crime/murder/2018"
           
           
             #getting url names and neighbourhood names
-            neighbourhood <- rvest::html_nodes(x = response, xpath = '//option[contains(@class, "d-1")]')
-            neighbourhood_names<-rvest::html_text(neighbourhood, trim =T)
-            neighbourhood_names<-neighbourhood_names[1:20]
+            neighborhood <- rvest::html_nodes(x = response, xpath = '//option[contains(@class, "d-1")]')
+            neighborhood_names<-rvest::html_text(neighborhood, trim =T)
+            neighborhood_names<-neighborhood_names[1:20]
+           
+            #col names
+            col<-c("crime","hour" ,"neighborhood")       
             
-            #get all urls
+             #get all urls
             urls<- rvest::html_nodes(x = response, xpath = '//option[contains(@class, "d-1")]')
             urls<-html_attr(x= urls, 'value')
             urls<-urls[1:20]
             urls<-paste(url2_home,urls,sep = "")
             urls<-gsub(" ", "", urls, fixed = TRUE)           
-            length(urls)
-            
-            
+            neighborhood_df<-data.frame(neighborhood_names, urls, pages, stringsAsFactors = F)
            
-            get_pages<-function(url)
-            {
-              res <- read_html(url) 
-              nod<-html_nodes(x= res, xpath = '//*[contains(@class, "pager")]')
-              t<-rvest::html_text(nod, trim =T)
-              if(length(t)>0)
-              t<-as.numeric(t[(length(t)-2)])
-              else t<-0
-              return (t)
-              
-            }
+            
             #check if any url has more than one page, if so add related urls to list
-            for (i in urls){
-              npages<-get_pages(i)
+            for (i in 1:length(urls)){
+              npages<-get_pages(urls[i])
+              neighborhood_df$pages[i]<-npages
               if(npages>0)
-                for(j in 1:npages-1)
+                for(j in 1:(npages-1))
                 {
-                  new_url<-paste(i, "?page=", j, sep = "")
-                  
+                  f <- data.frame( neighborhood_names= character(1), urls = character(1), pages= numeric(1), stringsAsFactors = FALSE)
+                  f$neighborhood_names<-neighborhood_df$neighborhood_names[i]
+                  f$urls<-paste(urls[i], "?page=", j, sep = "")
+                  f$pages<-j
+                 # new_url<-paste(i, "?page=", j, sep = "")
+                  neighborhood_df<-rbind(neighborhood_df, f)      
                 }
-            }
+              }            
            
-            urls<-c(urls, new_url)
+          #  urls<-c(urls, new_url)
             #create Empty dataframe
-             crime_data<-data.frame(matrix(ncol = 3, nrow = 0))
-             col<- c("crime", "hour", "neighborhood")
-          
-           #loop over urls, get crime and hour data, attach neighborhood name and bind rows for each
-           for (i in 1: length(urls))
-           {
-                crime<-GetHour_CrimeType(urls[i])    
+           crime_data<- data.frame(matrix(ncol = 3, nrow = 0))
+            x <- c("crime", "hour", "neighborhood")
+            colnames(crime_data) <- x
+          #   crime_data<-data.frame(crime = character(1), hour= character(1), neighborhood=character(1), stringsAsFactors = F)
+
+          #loop over urls, get crime and hour data, attach neighborhood name and bind rows for each
+           for (i in 1: nrow(neighborhood_df))
+           { 
+              # nh_name<-neighborhood_df$neighborhood_names[i]
+               crime<-GetHour_CrimeType(neighborhood_df$urls[i])    
                 #add neighbourhood
-                crime<-cbind(crime,neighbourhood_names[i])
+               crime<-cbind(crime,ifelse(is.na(neighborhood_df$neighborhood_names[i]),"",neighborhood_df$neighborhood_names[i]))
+               colnames(crime) <- col
                 #rowbind to add to original
                 crime_data<-rbind(crime_data, crime,stringsAsFactors = FALSE)
             }
-
+     
+            
+        crime_data<- crime_data%>%mutate(hour = as.numeric(hour))
            colnames(crime_data) <- col
            
            
