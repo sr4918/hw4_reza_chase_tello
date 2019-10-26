@@ -51,7 +51,25 @@ url<-"https://www.universalhub.com/crime/murder/2018"
             
 ########################################################## 
 #Assignment 4
-
+            trim.trailing <- function (x) sub("\\s+$", "", x)
+            
+            GetHour_CrimeType<-function(url)
+            {
+              response<-read_html(url)
+              date <- rvest::html_nodes(x = response,
+                                        xpath = '//td[contains(@class, "date")]')
+              date<-rvest::html_text(date, trim =T)
+              hours<-as.integer(parse_date_time(date, "%m%d%y-%H:%M %p") %>% hour())
+              
+              crime_type <- rvest::html_nodes(x = response,
+                                              xpath = '//td[contains(@class, "name")]')
+              type<-rvest::html_text(crime_type, trim =T)
+              type<-trim.trailing(type)
+              crime_df<-cbind(type, hours )
+              names(crime_df)<-c("crime", "hour")
+              return (crime_df)
+            }
+            
             
             #Q4.1  
             #name of the crime, from the Type field on each page. Make sure to get rid of trailing
@@ -69,40 +87,78 @@ url<-"https://www.universalhub.com/crime/murder/2018"
 
             url2<-"https://www.universalhub.com/crime"
             url2_home<-"https://www.universalhub.com"
-            #testing only
-            url3<-"https://www.universalhub.com/crime/south-end.html"
             #getting html from url
             response<-read_html(url2)
           
           
-            #getting neighbourhood names
-            neighbourhood <- rvest::html_nodes(x = response,
-                                               xpath = '//option[contains(@class, "d-1")]')
+            #getting url names and neighbourhood names
+            neighbourhood <- rvest::html_nodes(x = response, xpath = '//option[contains(@class, "d-1")]')
             neighbourhood_names<-rvest::html_text(neighbourhood, trim =T)
             neighbourhood_names<-neighbourhood_names[1:20]
             
             #get all urls
-            urls<- rvest::html_nodes(x = response,
-                                     xpath = '//option[contains(@class, "d-1")]')
+            urls<- rvest::html_nodes(x = response, xpath = '//option[contains(@class, "d-1")]')
             urls<-html_attr(x= urls, 'value')
             urls<-urls[1:20]
             urls<-paste(url2_home,urls,sep = "")
             urls<-gsub(" ", "", urls, fixed = TRUE)           
             length(urls)
+            
+            
+           
+            get_pages<-function(url)
+            {
+              res <- read_html(url) 
+              nod<-html_nodes(x= res, xpath = '//*[contains(@class, "pager")]')
+              t<-rvest::html_text(nod, trim =T)
+              if(length(t)>0)
+              t<-as.numeric(t[(length(t)-2)])
+              else t<-0
+              return (t)
+              
+            }
+            #check if any url has more than one page, if so add related urls to list
+            for (i in urls){
+              npages<-get_pages(i)
+              if(npages>0)
+                for(j in 1:npages-1)
+                {
+                  new_url<-paste(i, "?page=", j, sep = "")
+                  
+                }
+            }
+           
+            urls<-c(urls, new_url)
+            #create Empty dataframe
+             crime_data<-data.frame(matrix(ncol = 3, nrow = 0))
+             col<- c("crime", "hour", "neighborhood")
+          
+           #loop over urls, get crime and hour data, attach neighborhood name and bind rows for each
+           for (i in 1: length(urls))
+           {
+                crime<-GetHour_CrimeType(urls[i])    
+                #add neighbourhood
+                crime<-cbind(crime,neighbourhood_names[i])
+                #rowbind to add to original
+                crime_data<-rbind(crime_data, crime,stringsAsFactors = FALSE)
+            }
+
+           colnames(crime_data) <- col
            
            
-           
-             #testing with one link
+        #  
+            #testing with one link
             url3<-"https://www.universalhub.com/crime/south-end.html"
             #getting html from url
             response3<-read_html(url3)
+            
             
             
             #getting hour of crime
             date <- rvest::html_nodes(x = response3,
                                                xpath = '//td[contains(@class, "date")]')
             date<-rvest::html_text(date, trim =T)
-            hours<-parse_date_time(date, "%m%d%y-%H:%M %p") %>% hour()
+            hours<-as.integer(parse_date_time(date, "%m%d%y-%H:%M %p") %>% hour())
             
             #getting crime_type
             crime_type <- rvest::html_nodes(x = response3,
@@ -111,4 +167,4 @@ url<-"https://www.universalhub.com/crime/murder/2018"
             trim.trailing <- function (x) sub("\\s+$", "", x)
             type<-trim.trailing(type)
            
-            
+           x<-cbind(type,hours) 
