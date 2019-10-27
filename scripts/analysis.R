@@ -44,11 +44,30 @@ setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 
     #on the y-axis and the hour of day on the x-axis, and save this figure to figures/question_a3_1.png.
     A3.1<-A2.2%>%group_by(hour)%>%summarize(count = n())
     g3.1 <- ggplot(A3.1, aes(hour,count))
-    # Number of cars in each class:
     g3.1<- g3.1 + geom_col(aes(fill = "red"))  +labs(title="No of Crimes by Hour of Day", x="Hour", y="Crime Count")
     ggsave("hw4_Reza/figures/question_a3_1.png",g3.1)
     
     #A3.2
+    #For each of the five most common crime types, plot the total number of crimes (aggregated across
+    #neighborhoods) on the y-axis and the hour of day on the x-axis; your plot should have five lines, one for
+    #each crime type. Save this figure to figures/question_a3_2.png.
+    
+    A3.2<-filter(A2.2, A2.2$crime %in% A2.3_top5$crime)
+    A3.2<-A3.2%>%group_by(crime,hour)%>%summarize(count = n())
+    g3.2<-ggplot(data=A3.2, aes(x=hour, y=count, group = crime, colour = as.factor(crime))) +geom_line()  + 
+      labs(title="Top 5 Crimes againt Hour of Day", x="Hour", y="Crime Count")
+    ggsave("hw4_Reza/figures/question_a3_2.png",g3.2)
+    
+    #A3.3
+    #For Dorchester and Downtown, plot the total number of crimes (aggregated across all crime types, not
+    #just the top five) in each of the two neighborhoods on the y-axis and the hour on the x-axis; your plot
+    #should have two lines, one for each neighborhood. Save this figure to figures/question_a3_3.png.
+    A3.3<-A2.2%>%filter(neighborhood=="Dorchester" |neighborhood=="Downtown")
+    A3.3<-A3.3%>%group_by(neighborhood,hour)%>%summarize(count = n())
+    g3.3<-ggplot(data=A3.3, aes(x=hour, y=count, group = neighborhood, colour = as.factor(neighborhood))) +geom_line()  + 
+      labs(title="All Crimes againt Hour of Day Dorchester and DownTown", x="Hour", y="Crime Count")
+    ggsave("hw4_Reza/figures/question_a3_3.png",g3.3)
+    
     
     
     
