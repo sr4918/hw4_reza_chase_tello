@@ -84,9 +84,7 @@ library(ggplot2)
       names(model_performance)<-c("feature_one", "feature_two","validation_auc")
       max_auc <-max(model_performance$validation_auc)
       maxindex <- which(model_performance$validation_auc== max_auc)
-      maxindex
-      max_auc
-    #  write.csv(model_performance, "model_performance.csv")
+      #  write.csv(model_performance, "model_performance.csv")
       #33, 76.86)
       
 #B2.3
@@ -115,8 +113,7 @@ library(ggplot2)
       geom_vline(xintercept = this_auc, linetype = "dashed", color = "red")+
         labs(title="Histogram for AUC of different models", x="validation_AUC", y="Count")
       ggsave("hw4_reza_chase_tello/figures/question_b2.png", myhistogram)
-      myhistogram
-
+      
 #B3
       #B3.1
       #1. Take sqf_data from Question B1.2 and split it temporally at the year 2015, storing the results as
