@@ -88,8 +88,7 @@ library(lubridate)
            crime_data<- data.frame(matrix(ncol = 3, nrow = 0))
             x <- c("crime", "hour", "neighborhood")
             colnames(crime_data) <- x
-          #   crime_data<-data.frame(crime = character(1), hour= character(1), neighborhood=character(1), stringsAsFactors = F)
-
+          
           #loop over all urls in neighborhood_df, get crime and hour data, attach neighborhood name and bind rows for each
            for (i in 1: nrow(neighborhood_df))
            { 
@@ -103,7 +102,7 @@ library(lubridate)
      
             
         crime_data<- crime_data%>%mutate(hour = as.integer(hour))
-        write_csv(crime_data, "hw4_Reza/data/question_a2_1.csv")
+        write_csv(crime_data, "hw4_reza_chase_tello/data/question_a2_1.csv")
            
            
         
