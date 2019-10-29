@@ -3,7 +3,7 @@ library(rvest)
 library(lubridate)
 library(RecordLinkage)
 library(ggplot2)
-setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 4")
+#setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 4")
 
 
 #Question A2.2
@@ -15,7 +15,7 @@ setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 
 # 3. Sort the rows in this tibble in descending order by count, and save the rows for the five most common
 #crime types to data/question_a2_2.csv within your submission directory.
 
-    A2.2<-read_csv("hw4_Reza/data/question_a2_1.csv")
+    A2.2<-read_csv("hw4_reza_chase_tello/data/question_a2_1.csv")
     
     # crime and count, where crime is each unique crime type, and count is the number of times the corresponding
     #crime type occurred (aggregated across neighborhoods and hours). Be alert for misspellings
@@ -35,7 +35,7 @@ setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 
     
     A2.3_top5<-A2.3_summary%>%slice(1:5)
     
-    write_csv(A2.3_top5, "hw4_Reza/data/question_a2_2.csv")
+    write_csv(A2.3_top5, "hw4_reza_chase_tello/data/question_a2_2.csv")
     
     
 #Question A3
@@ -45,7 +45,7 @@ setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 
     A3.1<-A2.2%>%group_by(hour)%>%summarize(count = n())
     g3.1 <- ggplot(A3.1, aes(hour,count))
     g3.1<- g3.1 + geom_col(aes(fill = "red"))  +labs(title="No of Crimes by Hour of Day", x="Hour", y="Crime Count")
-    ggsave("hw4_Reza/figures/question_a3_1.png",g3.1)
+    ggsave("hw4_reza_chase_tello/figures/question_a3_1.png",g3.1)
     
     #A3.2
     #For each of the five most common crime types, plot the total number of crimes (aggregated across
@@ -56,7 +56,7 @@ setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 
     A3.2<-A3.2%>%group_by(crime,hour)%>%summarize(count = n())
     g3.2<-ggplot(data=A3.2, aes(x=hour, y=count, group = crime, colour = as.factor(crime))) +geom_line()  + 
       labs(title="Top 5 Crimes againt Hour of Day", x="Hour", y="Crime Count")
-    ggsave("hw4_Reza/figures/question_a3_2.png",g3.2)
+    ggsave("hw4_reza_chase_tello/figures/question_a3_2.png",g3.2)
     
     #A3.3
     #For Dorchester and Downtown, plot the total number of crimes (aggregated across all crime types, not
@@ -66,7 +66,7 @@ setwd("C:/Users/samee/Dropbox/NYU-PhD/3. Fall 2019/Messy Data and ML/Assignment 
     A3.3<-A3.3%>%group_by(neighborhood,hour)%>%summarize(count = n())
     g3.3<-ggplot(data=A3.3, aes(x=hour, y=count, group = neighborhood, colour = as.factor(neighborhood))) +geom_line()  + 
       labs(title="All Crimes againt Hour of Day Dorchester and DownTown", x="Hour", y="Crime Count")
-    ggsave("hw4_Reza/figures/question_a3_3.png",g3.3)
+    ggsave("hw4_reza_chase_tello/figures/question_a3_3.png",g3.3)
     
     
     
