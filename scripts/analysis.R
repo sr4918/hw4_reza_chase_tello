@@ -20,7 +20,7 @@ library(ggplot2)
     # crime and count, where crime is each unique crime type, and count is the number of times the corresponding
     #crime type occurred (aggregated across neighborhoods and hours). Be alert for misspellings
     #of crime types!
-    unique(A2.2$crime)
+    #unique(A2.2$crime)
     A2.2<-A2.2%>%mutate(crime = tolower(crime))
     
     #only shooting has been misspelled in data
@@ -28,8 +28,9 @@ library(ggplot2)
     #above changes all except "shootin"
     A2.2<-A2.2%>%mutate(crime = ifelse(soundex(crime)==soundex('shootin'),"shooting",crime))
     
-    A2.3#Sort the rows in this tibble in descending order by count, and save the rows for the five most common
-        #crime types to data/question_a2_2.csv within your submission directory.
+    #A2.3
+    #Sort the rows in this tibble in descending order by count, and save the rows for the five most common
+     #crime types to data/question_a2_2.csv within your submission directory.
      #counting incidents aggregated across neibourhoods and hours
     A2.3_summary<-A2.2%>%group_by(crime)%>% summarise(count = n()) %>%arrange(desc(count))
     
@@ -46,12 +47,6 @@ library(ggplot2)
     g3.1 <- ggplot(A3.1, aes(hour,count))
     g3.1<- g3.1 + geom_col(color = "white", fill = "blue")  +labs(title="No of Crimes by Hour of Day", x="Hour", y="Crime Count")
     ggsave("hw4_reza_chase_tello/figures/question_a3_1.png",g3.1)
-    
-    
-    ggplot2::ggplot(df, aes(x=time)) + geom_histogram(binwidth = 1, colour = "white") +ggtitle("Crimes by Hour") 
-    dir.create("figures")
-    ggsave("hw_4_chase_tello-master/figures/question_a3_1.png")
-    
     
     #A3.2
     #For each of the five most common crime types, plot the total number of crimes (aggregated across
