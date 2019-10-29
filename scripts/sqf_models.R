@@ -226,7 +226,7 @@ library(ggplot2)
       #figures/question_b4.png in your submission. In your writeup, report what you see in this plot, and
       #why this might occur.
      
-      AUC_year <-ggplot(auc_df, aes(Year, AUC))+geom_bar(stat = "identity")
+      AUC_year <-ggplot(auc_df, aes(Year, AUC))+geom_bar(stat = "identity", color = "white", fill= "blue")+ labs(title = "AUC for every year 2009-2016")
       ggsave("hw4_reza_chase_tello/figures/question_b4.png", AUC_year)
       
     
