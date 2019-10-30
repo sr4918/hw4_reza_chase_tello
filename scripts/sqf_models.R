@@ -32,7 +32,8 @@ library(ggplot2)
       #3.Randomly shuffle   the rows of sqf_dataand split it into training, validation, and test sets,
       #using a60%-20%-20% split. Call the resulting tibbles train_sqf,validation_sqf, and test_sqf.  
       set.seed(2048)
-      sqf_data<-sample_n(sqf_data, n())
+      sqf_data<-sqf_data[sample(1:nrow(sqf_data)),]
+    #  sqf_data<-sample_n(sqf_data, n())
 
       temp<-sample(1:nrow(sqf_data),.6*nrow(sqf_data))
       train_sqf <- sqf_data[temp,]
@@ -101,7 +102,7 @@ library(ggplot2)
       ROCR_B2.3 <- prediction(pred_B2.3, test_sqf$found.weapon)
       auc_ROCR_B2.3 <- performance(ROCR_B2.3, measure = "auc")
       this_auc<-auc_ROCR_B2.3@y.values[[1]]
-      this_auc
+      #this_auc
       #75.57%
       
 #B2.4 Plot a histogram of the 528 validation set AUC scores from Question B2.1, with a solid red
